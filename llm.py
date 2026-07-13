@@ -19,10 +19,52 @@ class QuotaExhaustedError(RuntimeError):
 
 _quota_known_exhausted = False
 
+# Running totals for this process/session
+_session_token_usage = {
+    "prompt_tokens": 0,
+    "completion_tokens": 0,
+    "total_tokens": 0,
+    "calls": 0,
+}
+
 
 def _is_quota_error(exc: Exception) -> bool:
     msg = str(exc)
     return "429" in msg or "rate_limit" in msg.lower() or "RESOURCE_EXHAUSTED" in msg
+
+
+def _record_usage(usage) -> None:
+    """Update session totals and print a per-call token usage line."""
+    if usage is None:
+        return
+
+    prompt_tokens = getattr(usage, "prompt_tokens", 0) or 0
+    completion_tokens = getattr(usage, "completion_tokens", 0) or 0
+    total_tokens = getattr(usage, "total_tokens", prompt_tokens + completion_tokens)
+
+    _session_token_usage["prompt_tokens"] += prompt_tokens
+    _session_token_usage["completion_tokens"] += completion_tokens
+    _session_token_usage["total_tokens"] += total_tokens
+    _session_token_usage["calls"] += 1
+
+    print(
+        f"🔢 Tokens — this call: {total_tokens} "
+        f"(prompt: {prompt_tokens}, completion: {completion_tokens}) | "
+        f"session total: {_session_token_usage['total_tokens']} "
+        f"over {_session_token_usage['calls']} call(s)"
+    )
+
+
+def get_session_token_usage() -> dict:
+    """Return a copy of the accumulated token usage stats for this session."""
+    return dict(_session_token_usage)
+
+
+def reset_session_token_usage() -> None:
+    """Reset the accumulated token usage stats (e.g. between test runs)."""
+    _session_token_usage.update(
+        {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0, "calls": 0}
+    )
 
 
 def call_llm(system_prompt: str, user_prompt: str) -> str:
@@ -57,6 +99,9 @@ def call_llm(system_prompt: str, user_prompt: str) -> str:
                 ],
                 temperature=0,
             )
+
+            _record_usage(getattr(response, "usage", None))
+
             return response.choices[0].message.content.strip()
 
         except Exception as e:

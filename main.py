@@ -7,6 +7,9 @@ Run:
 from graph import build_graph
 
 
+EXIT_WORDS = {"exit", "quit", "q", "bye"}
+
+
 def main():
     app = build_graph()
 
@@ -18,18 +21,32 @@ def main():
     chat_history = []
 
     while True:
-        query = input("\nYou: ")
+        try:
+            query = input("\nYou: ")
+        except (EOFError, KeyboardInterrupt):
+            print("\n\n👋 Thank you for using the College Helpdesk Chatbot!")
+            break
 
-        if query.lower() in ["exit", "quit"]:
+        query = query.strip()
+
+        if not query:
+            continue
+
+        if query.lower() in EXIT_WORDS:
             print("\n👋 Thank you for using the College Helpdesk Chatbot!")
             break
 
-        result = app.invoke(
-            {
-                "query": query,
-                "chat_history": chat_history,
-            }
-        )
+        try:
+            result = app.invoke(
+                {
+                    "query": query,
+                    "chat_history": chat_history,
+                }
+            )
+        except Exception as e:
+            print(f"\n⚠️  Something went wrong while processing that: {e}")
+            print("Please try again, or type 'exit' to quit.")
+            continue
 
         print("\n" + "=" * 60)
         print("🎯 Intent Detected :", result["intent"])
