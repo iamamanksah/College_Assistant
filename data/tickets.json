@@ -1,0 +1,9 @@
+[
+    {
+        "ticket_id": "TKT-20260715-001",
+        "query": "My fee was deducted but the portal is not showing payment",
+        "department": "fees",
+        "status": "open",
+        "created_at": "2026-07-15T19:40:27.824257"
+    }
+]

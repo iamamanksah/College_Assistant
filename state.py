@@ -10,6 +10,9 @@ Field names match the class activity: query, intent, department
 (the data the specialist agent found), and response (the final
 answer). chat_history is added so the assistant can answer
 follow-up questions using past turns.
+
+Ticket fields are added to support helpdesk ticket creation for
+issues that require human assistance.
 """
 
 from typing import TypedDict, Optional, List
@@ -20,7 +23,7 @@ class CollegeState(TypedDict):
     query: str
 
     # Filled in by the Intent Classifier node.
-    # One of: "admission", "exam", "fees", "scholarship"
+    # One of: "admission", "exam", "fees", "scholarship", "general"
     intent: Optional[str]
 
     # Filled in by whichever specialist agent handles the query —
@@ -33,3 +36,12 @@ class CollegeState(TypedDict):
     # Running conversation history, so follow-up questions can be
     # answered using context from earlier turns
     chat_history: List[str]
+
+    # Whether the issue needs human helpdesk support
+    ticket_required: bool
+
+    # Unique ID of the generated support ticket
+    ticket_id: Optional[str]
+
+    # Current status of the support ticket
+    ticket_status: Optional[str]

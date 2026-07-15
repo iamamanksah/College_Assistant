@@ -67,13 +67,42 @@ def main():
         print("\n" + "=" * 60)
         print("🎯 Intent Detected :", result["intent"])
         print("📂 Department      :", result["department"])
-        print("\n🤖 Bot:")
-        print(result["response"])
+
+        # Display support ticket or normal chatbot response
+        if result.get("ticket_id"):
+            print("\n🎫 SUPPORT TICKET CREATED")
+            print(f"🆔 Ticket ID   : {result['ticket_id']}")
+            print(f"📂 Department  : {result['intent']}")
+            print(f"📌 Status      : {result['ticket_status']}")
+            print(
+                "\nYour issue has been forwarded "
+                "to the helpdesk team."
+            )
+        else:
+            print("\n🤖 Bot:")
+            print(result["response"])
+
         print("=" * 60)
 
-        chat_history.append({"role": "user", "content": query})
+        # Store user message in chat history
         chat_history.append(
-            {"role": "assistant", "content": result["response"]}
+            {"role": "user", "content": query}
+        )
+
+        # Store ticket response or normal AI response
+        if result.get("ticket_id"):
+            assistant_message = (
+                f"Support ticket {result['ticket_id']} created "
+                f"for the {result['intent']} department."
+            )
+        else:
+            assistant_message = result["response"]
+
+        chat_history.append(
+            {
+                "role": "assistant",
+                "content": assistant_message,
+            }
         )
 
 
